@@ -5,6 +5,8 @@
     <MoiveContent/>
     <br><br><br>
     <Animation/>
+    <br><br><br>
+    <Drama/>
   </div>
 </template>
 
@@ -12,8 +14,11 @@
 import ImageSlider from './ImageSlider.vue';
 import Animation from './Animation.vue';
 import MoiveContent from "./MoiveContent.vue";
+import Drama from "./Drama.vue";
 </script>
 
 <style scoped>
-/* 필요한 스타일 작성 */
+* {
+  background: white;
+}
 </style>

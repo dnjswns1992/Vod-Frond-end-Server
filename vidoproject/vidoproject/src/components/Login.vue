@@ -1,26 +1,398 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-900">
-    <div class="bg-black text-white rounded-lg p-8 shadow-lg max-w-sm w-full">
-      <h1 class="text-center text-3xl font-bold mb-4">LAFTEL</h1>
-      <p class="text-center mb-8">동시방영 신작부터 역대 인기작까지 한 곳에서 편-안하게!</p>
-      <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4">
-        이메일로 시작
-      </button>
-      <p class="text-center text-gray-400 mb-4">마지막으로 로그인한 수단이에요</p>
-      <div class="flex justify-center space-x-4">
-        <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full">카카오</button>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">구글</button>
-        <button class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded-full">페이스북</button>
-        <button class="bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-full">애플</button>
-      </div>
+  <div class="container">
+    <div class="login__content">
+      <img src="../assets/image/Login/LoginImage.png" alt="login image" class="login__img">
+      <form @submit.prevent="submitForm" class="login__form">
+        <div>
+          <div class="login__inputs">
+            <div>
+              <label for="input-email" class="login__label font-semibold">아이디</label>
+              <input type="text" v-model="username" placeholder="아이디를 입력해주세요." required class="login__input" id="input-email">
+            </div>
+            <div>
+              <label for="input-pass" class="login__label font-semibold">패스워드</label>
+              <div class="login__box">
+                <input type="password" v-model="password" placeholder="패스워드를 입력해주세요." required class="login__input" id="input-pass">
+                <i class="ri-eye-off-line login__eye" id="input-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="login__buttons">
+            <button type="submit" class="login__button font-semibold">Log In</button>
+            <router-link to="/Register" class="login__button-ghost-wrapper">
+              <button type="button" class="login__button login__button-ghost font-semibold">Sign Up</button>
+            </router-link>
+          </div>
+          <button @click="redirectToGoogle" type="button" class="google-login-button font-semibold">
+            <img src="../assets/image/Login/google.png" alt="Google Logo" class="google-logo">
+            구글 로그인
+          </button>
+          <button @click="redirectToNaver" type="button" class="google-login-button font-semibold">
+            <img src="../assets/image/Login/Naver.png" alt="Naver Logo" class="google-logo">
+            네이버 로그인
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-// 여기에 스크립트 로직을 추가할 수 있습니다.
+import { ref } from 'vue';
+import axios from 'axios';
+import { useUserStore } from "../assets/store.js";
+import router from "../router/router.js";
+
+const username = ref('');
+const password = ref('');
+const userStore = useUserStore();
+
+const redirectToGoogle = () => {
+  window.location.href = 'http://localhost:8081/oauth2/authorization/google';
+};
+
+const redirectToNaver = () => {
+  window.location.href = 'http://localhost:8081/oauth2/authorization/naver';
+};
+
+const submitForm = async () => {
+  try {
+    const response = await axios.post('http://localhost:8081/login', {
+      username: username.value,
+      password: password.value
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const token = response.data.token;
+    localStorage.setItem('jwt', token);
+    localStorage.setItem('isLogin', 'true');
+    userStore.FormLogin = true;
+    userStore.OauthLogin = false;
+    alert("로그인 되었습니다.");
+
+    await userStore.fetchUserProfile();
+    await router.push('/');
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      alert('아이디 또는 비밀번호가 맞지 않습니다.');
+    } else {
+      console.error(error);
+    }
+  }
+};
 </script>
 
 <style scoped>
-/* 필요에 따라 추가 스타일을 작성할 수 있습니다. */
+/*=============== GOOGLE FONTS ===============*/
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+
+/*=============== VARIABLES CSS ===============*/
+:root {
+  /*========== Colors ==========*/
+  /*Color mode HSL(hue, saturation, lightness)*/
+  --first-color: hsl(244, 75%, 57%);
+  --second-color: hsl(249, 64%, 47%);
+  --title-color: hsl(244, 12%, 12%);
+  --text-color: hsl(244, 4%, 36%);
+  --body-color: hsl(208, 97%, 85%);
+  /*========== Font and typography ==========*/
+  /*.5rem = 8px | 1rem = 16px ...*/
+  --body-font: "Poppins", sans-serif;
+  --h2-font-size: 1.25rem;
+  --small-font-size: .813rem;
+  --smaller-font-size: .75rem;
+  /*========== Font weight ==========*/
+  --font-medium: 500;
+  --font-semi-bold: 600;
+}
+
+@media screen and (min-width: 1024px) {
+  :root {
+    --h2-font-size: 1.75rem;
+    --normal-font-size: 1rem;
+    --small-font-size: .875rem;
+    --smaller-font-size: .813rem;
+  }
+}
+
+/*=============== BASE ===============*/
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background-color: var(--body-color);
+  font-family: var(--body-font);
+  color: var(--text-color);
+}
+
+input,
+button {
+  font-family: var(--body-font);
+  border: none;
+  outline: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/*=============== LOGIN FORM ===============*/
+.login__content, .login__form, .login__inputs {
+  display: grid;
+}
+
+.login__content {
+  position: relative;
+  height: 100vh;
+  align-items: center;
+}
+
+.login__img {
+  position: fixed; /* Fixed position to cover the entire screen */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: -1; /* Ensure the image is behind other content */
+}
+
+.login__form {
+  position: relative;
+  background-color: hsla(244, 16%, 92%, 0.6);
+  border: 2px solid hsla(244, 16%, 92%, 0.75);
+  margin-inline: 1.5rem;
+  row-gap: 1.25rem;
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  border-radius: 1rem;
+}
+
+.login__title {
+  color: var(--title-color);
+  font-size: var(--h2-font-size);
+  margin-bottom: 0.5rem;
+}
+
+.login__title span {
+  color: var(--first-color);
+}
+
+.login__description {
+  font-size: var(--small-font-size);
+}
+
+.login__inputs {
+  row-gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.login__label {
+  display: block;
+  color: var(--title-color);
+  font-size: var(--small-font-size);
+  font-weight: var(--font-semi-bold);
+  margin-bottom: 0.25rem;
+}
+
+.login__input {
+  width: 100%;
+  padding: 14px 12px;
+  border-radius: 6px;
+  border: 2px solid var(--text-color);
+  background-color: hsla(244, 16%, 92%, 0.6);
+  color: var(--title-color);
+  font-size: var(--smaller-font-size);
+  font-weight: var(--font-medium);
+  transition: border 0.4s;
+}
+
+.login__input::placeholder {
+  color: var(--text-color);
+}
+
+.login__input:focus, .login__input:valid {
+  border: 2px solid var(--first-color);
+}
+
+.login__box {
+  position: relative;
+}
+
+.login__box .login__input {
+  padding-right: 36px;
+}
+
+.login__eye {
+  width: max-content;
+  height: max-content;
+  position: absolute;
+  right: 0.75rem;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.login__check {
+  display: flex;
+  column-gap: 0.5rem;
+  align-items: center;
+}
+
+.login__check-input {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--text-color);
+  background-color: hsla(244, 16%, 92%, 0.2);
+  border-radius: 0.25rem;
+}
+
+.login__check-input:checked {
+  background: var(--first-color);
+}
+
+.login__check-input:checked::before {
+  content: "✔";
+  display: block;
+  color: #fff;
+  font-size: 0.75rem;
+  transform: translate(1.5px, -2.5px);
+}
+
+.login__check-label {
+  font-size: var(--small-font-size);
+}
+
+.login__buttons {
+  display: flex;
+  column-gap: 0.75rem;
+}
+
+.login__button {
+  width: 100%;
+  padding: 14px 2rem;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--first-color), var(--second-color));
+  color: #fff;
+  font-size: var(--small-font-size);
+  font-weight: var(--font-semi-bold);
+  box-shadow: 0 6px 24px hsla(244, 75%, 48%, 0.5);
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.login__button-ghost-wrapper {
+  width: 100%;
+}
+
+.login__button-ghost {
+  background: hsla(244, 16%, 92%, 0.6);
+  border: 2px solid var(--first-color);
+  color: var(--first-color);
+  box-shadow: none;
+}
+
+.login__forgot {
+  font-size: var(--smaller-font-size);
+  font-weight: var(--font-semi-bold);
+  color: var(--first-color);
+  text-decoration: none;
+}
+
+.google-login-button {
+  @apply flex items-center justify-center w-full py-3 px-4 mt-4 bg-white border border-gray-300 rounded-full shadow hover:bg-gray-100;
+}
+
+.google-logo {
+  @apply w-6 h-6 mr-2 rounded-full;
+}
+
+/*=============== BREAKPOINTS ===============*/
+/* For small devices */
+@media screen and (max-width: 360px) {
+  .login__buttons {
+    flex-direction: column;
+  }
+}
+
+/* For medium devices */
+@media screen and (min-width: 576px) {
+  .login__form {
+    width: 450px;
+    justify-self: center;
+  }
+}
+
+/* For large devices */
+@media screen and (min-width: 1064px) {
+  .container {
+    height: 100vh;
+    display: grid;
+    place-items: center;
+  }
+
+  .login__content {
+    width: 1024px;
+    height: 600px;
+  }
+
+  .login__form {
+    justify-self: flex-end;
+    margin-right: 4.5rem;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .login__content {
+    height: 700px;
+  }
+
+  .login__form {
+    row-gap: 2rem;
+    padding: 3rem;
+    border-radius: 1.25rem;
+    border: 2.5px solid hsla(244, 16%, 92%, 0.75);
+  }
+
+  .login__description, .login__label, .login__button {
+    font-size: var(--normal-font-size);
+  }
+
+  .login__inputs {
+    row-gap: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .login__input {
+    border: 2.5px solid var(--text-color);
+    padding: 1rem;
+    font-size: var(--small-font-size);
+  }
+
+  .login__input:focus, .login__input:valid {
+    border: 2.5px solid var(--first-color);
+  }
+
+  .login__button {
+    padding-block: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .login__button-ghost {
+    border: 2.5px solid var(--first-color);
+  }
+}
 </style>
