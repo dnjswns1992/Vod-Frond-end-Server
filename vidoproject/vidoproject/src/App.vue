@@ -1,10 +1,12 @@
 <template>
   <NavBar/>
+  <br><br>
   <router-view/>
 </template>
 
 <script setup>
 import NavBar from "./components/NavBar.vue";
+import EmailLogin from "./components/EmailLogin.vue";
 </script>
 
 <style scoped>

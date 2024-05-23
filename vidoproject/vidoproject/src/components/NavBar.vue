@@ -47,7 +47,7 @@
               <div class="p-4 border-b">
                 <img class="h-8 w-8 rounded-full" src="https://i.namu.wiki/i/eFb4WQiCqn_eR20aTLkki2_mdvVS6qGirWP9tbtTBHZn35yQ6Wo_MjB1UVNFviZqBemJp2J0mgyq0bzS-SawZNtCsMcOYQG7oi0wM9Y3ezqmejyUSH6Q1XhqrmumYvxTI69m2DjX8NGBw-4J_ntITw.webp" alt="User Image">
                 <br>
-                <div class="font-bold text-gray-900">{{ userStore.user.username }}</div>
+                <div class="font-bold text-gray-900">{{ userStore.user.nickName }}</div>
                 <div class="text-sm text-gray-600">{{ userStore.user.email }}</div>
               </div>
               <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-0">프로필 선택</a>
@@ -65,12 +65,12 @@
                   <div class="text-sm text-gray-600">등급</div>
                 </div>
               </div>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-6">설정</a>
+              <router-link to="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-6">설정</router-link>
               <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-7">고객센터</a>
               <a href="#" @click="userStore.logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-8">로그아웃</a>
             </div>
           </div>
-          <button v-if="userStore.LoginCheck==='true' && userStore.FormLogin" @click="userStore.toggleModal()"><span class="font-bold text-gray-900">{{ userStore.user.username }}</span></button>
+          <button v-if="userStore.LoginCheck==='true' && userStore.FormLogin" @click="userStore.toggleModal()"><span class="font-bold text-gray-900">{{ userStore.user.nickName}}</span></button>
           <button v-if="userStore.LoginCheck==='true' && userStore.OauthLogin" @click="userStore.toggleModal()"><span class="font-bold text-gray-900">{{ userStore.user.email }}</span></button>
 
         </div>
@@ -97,6 +97,7 @@ const userStore = useUserStore(); // Pinia 스토어 사용
 
 onMounted(() => {
   userStore.fetchUserProfile(); // 사용자 프로필 데이터 가져오기
+
 });
 </script>
 

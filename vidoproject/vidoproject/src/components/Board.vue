@@ -13,10 +13,15 @@
       </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-300">
-      <tr v-for="post in posts" :key="post.id" class="hover:bg-gray-100 transition duration-150 ease-in-out">
+      <tr v-for="post in PostTable" :key="post.id" class="hover:bg-gray-100 transition duration-150 ease-in-out">
         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ post.postId }}</td>
-        <td class="text-black font-semibold px-4 py-2 whitespace-nowrap text-sm text-gray-700"><a href="#" class="text-black hover:text-blue-900">{{ post.title }}</a></td>
-        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ post.username}}</td>
+
+        <td class="text-black font-semibold px-4 py-2 whitespace-nowrap text-sm text-gray-700">
+          <router-link :to="{ name: 'PostDetail', params: { id: post.postId } }" class="text-black hover:text-blue-900">
+            {{ post.title }}<span class="text-gray-500 pl-1">[{{ post.commentCount }}]</span>
+          </router-link>
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ post.nickname}}</td>
         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ post.createTime }}</td>
         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ post.postHit }}</td>
         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{{ 0 }}</td>
@@ -32,19 +37,19 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import axios from "axios";
+import {usePostStore, useUserStore} from "../assets/store.js";
 
-const posts = ref([]);
+const postStore = usePostStore();
+const PostTable = ref([]);
+
+console.log("포스트 테이블",PostTable)
 
 onMounted(async () => {
-
-  try {
-    const response = await axios.get('http://localhost:8081/user/bring/post');
-    posts.value = response.data;
-  }catch (error) {
-    console.error("Failed Bring error ",error);
-  }
-
+  await postStore.fetchPosts();
+  PostTable.value = postStore.posts;
 })
+
+
 
 
 

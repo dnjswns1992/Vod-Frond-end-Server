@@ -41,3 +41,19 @@ export const useUserStore = defineStore('user', {
         },
     },
 });
+
+export const usePostStore = defineStore('post', {
+    state: () => ({
+        posts: [],
+    }),
+    actions: {
+        async fetchPosts() {
+            try {
+                const response = await axios.get('http://localhost:8081/user/bring/post');
+                this.posts = response.data;
+            } catch (error) {
+                console.error("Failed to fetch posts", error);
+            }
+        }
+    },
+});

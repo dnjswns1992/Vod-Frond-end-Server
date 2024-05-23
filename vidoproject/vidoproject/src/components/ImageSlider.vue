@@ -2,7 +2,7 @@
   <div class="swiper-container">
     <swiper :modules="[Navigation, Pagination,Autoplay]" navigation pagination autoplay :autoplay="{delay : 3000}" class="mySwiper">
       <swiper-slide>
-        <img src="../assets/image/SilderImgage/img_6.png" alt="Image 1" class="slide-image">
+        <img src="../assets/image/SilderImgage/img.png" alt="Image 1" class="slide-image">
       </swiper-slide>
       <swiper-slide>
         <img src="../assets/image/SilderImgage/img_8.png" alt="Image 2" class="slide-image">
