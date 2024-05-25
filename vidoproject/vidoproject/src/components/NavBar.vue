@@ -27,6 +27,7 @@
               <a href="#" class="text-black font-semibold hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">테마 추천</a>
               <a href="#" class="text-black font-semibold hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">요일별 신작</a>
               <router-link to="/board" href="#" class="text-black font-semibold hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">커뮤니티</router-link>
+              <router-link to="/videoUpload" v-if="userStore.ROLE === 'ROLE_ADMIN'" href="#" class="text-black font-semibold hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">동영상 올리기</router-link>
             </div>
           </div>
         </div>
@@ -97,6 +98,8 @@ const userStore = useUserStore(); // Pinia 스토어 사용
 
 onMounted(() => {
   userStore.fetchUserProfile(); // 사용자 프로필 데이터 가져오기
+  console.log("유저 정보",userStore.user);
+  console.log("롤 유저",userStore.ROLE);
 
 });
 </script>

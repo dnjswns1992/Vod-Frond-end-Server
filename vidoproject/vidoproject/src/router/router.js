@@ -8,6 +8,7 @@ import BoardWriter from "../components/BoardWriter.vue";
 import PostDetail from "../components/PostDetail.vue";
 import EmailLogin from "../components/EmailLogin.vue";
 import Profile from "../components/Profile.vue";
+import VideoUpload from "../components/videoUpload.vue";
 const router =createRouter({
     history : createWebHistory(),
     routes :[
@@ -19,6 +20,7 @@ const router =createRouter({
         {path : '/boardWriter', component: BoardWriter},
         {path : '/boardDetail/:id' , component : PostDetail,name :'PostDetail'},
         {path : '/profile', component : Profile},
+        {path : '/videoUpload', component : VideoUpload},
         ]
 })
 

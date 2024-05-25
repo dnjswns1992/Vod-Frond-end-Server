@@ -7,6 +7,7 @@ export const useUserStore = defineStore('user', {
         OauthLogin: false,
         isModal: false,
         LoginCheck: localStorage.getItem('isLogin') || 'false',
+        ROLE : '',
         user: {},
     }),
     actions: {
@@ -27,6 +28,7 @@ export const useUserStore = defineStore('user', {
                     this.FormLogin = !this.OauthLogin;
                     this.isModal = false;
                     this.LoginCheck = 'true';  // 상태 업데이트
+                    this.ROLE = response.data.role;
                 }
             } catch (error) {
                 console.log(error);
@@ -50,9 +52,10 @@ export const usePostStore = defineStore('post', {
         async fetchPosts() {
             try {
                 const response = await axios.get('http://localhost:8081/user/bring/post');
-                this.posts = response.data;
+                this.posts = Array.isArray(response.data) ? response.data : [];
             } catch (error) {
                 console.error("Failed to fetch posts", error);
+                this.posts = [];
             }
         }
     },
