@@ -63,19 +63,25 @@
 
     <!-- 에피소드 등록 폼 -->
     <form @submit.prevent="submitForm" class="form" v-if="uploadType === 'episode'">
+
       <div class="form-group">
         <label for="title" class="label">Title</label>
         <input type="text" id="title" v-model="title" class="input" required>
       </div>
 
       <div class="form-group">
+        <label for="title" class="label">에피소드 번호</label>
+        <input type="text" id="title" v-model="episodeNumber" class="input" required>
+      </div>
+      <div class="form-group">
+        <label for="description" class="label">Description</label>
+        <textarea id="description" v-model="description" class="textarea" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
         <label for="video" class="label">Upload Video</label>
         <input type="file" id="video" @change="handleVideoUpload" class="input-file" accept="video/*" required>
       </div>
-      <div class="form-group">
-        <label for="image" class="label">Upload Image</label>
-        <input type="file" id="image" @change="handleImageUpload" class="input-file" accept="image/*" required>
-      </div>
+
       <div class="form-group">
         <button type="submit" class="button">에피소드 등록</button>
       </div>
@@ -90,7 +96,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 
+const episodeNumber = ref('');
 const title = ref('');
+const description = ref(''); // New description ref
 const selectedCategory = ref('');
 const selectedSeason = ref('');
 const selectedType = ref('');
@@ -151,13 +159,12 @@ const submitForm = async () => {
   const formData = new FormData();
   const videoDto = {
     title: title.value,
-    category: selectedCategory.value,
-    type: selectedType.value,
+    episodeNumber: episodeNumber.value,
+    description: description.value,
   };
 
-  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], { type: "application/json" }));
+  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], {type: "application/json"}));
   formData.append('video', videoFile.value);
-  formData.append('image', imageFile.value);
 
   try {
     const token = localStorage.getItem("jwt");
@@ -177,6 +184,8 @@ const submitForm = async () => {
   }
 };
 
+
+
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
   const formData = new FormData();
@@ -187,7 +196,7 @@ const mainTitleSubmit = async () => {
     genre: selectedType.value,
   };
 
-  formData.append('mainTitleDto', new Blob([JSON.stringify(mainTitleDto)], { type: "application/json" }));
+  formData.append('mainTitleDto', new Blob([JSON.stringify(mainTitleDto)], {type: "application/json"}));
   formData.append('Image', imageFile.value);
 
   try {
@@ -282,6 +291,11 @@ const mainTitleSubmit = async () => {
   border-color: #007bff;
 }
 
+.textarea {
+  height: 100px;
+  resize: vertical;
+}
+
 .dropdown {
   position: relative;
   width: 100%;
@@ -352,12 +366,13 @@ const mainTitleSubmit = async () => {
 }
 
 .btn-1 {
-  background: rgb(6,14,131);
-  background: linear-gradient(0deg, rgba(6,14,131,1) 0%, rgba(12,25,180,1) 100%);
+  background: rgb(6, 14, 131);
+  background: linear-gradient(0deg, rgba(6, 14, 131, 1) 0%, rgba(12, 25, 180, 1) 100%);
   border: none;
 }
+
 .btn-1:hover {
-  background: rgb(0,3,255);
-  background: linear-gradient(0deg, rgba(0,3,255,1) 0%, rgba(2,126,251,1) 100%);
+  background: rgb(0, 3, 255);
+  background: linear-gradient(0deg, rgba(0, 3, 255, 1) 0%, rgba(2, 126, 251, 1) 100%);
 }
 </style>
