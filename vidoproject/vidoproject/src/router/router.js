@@ -22,7 +22,8 @@ const router =createRouter({
         {path : '/boardDetail/:id' , component : PostDetail,name :'PostDetail'},
         {path : '/profile', component : Profile},
         {path : '/videoUpload', component : VideoUpload},
-        {path : '/video' ,component: VideoPlayer}
+        {path : '/video' ,component: VideoPlayer},
+
         ]
 })
 

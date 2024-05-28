@@ -1,6 +1,12 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 
+export const useConfigStore = defineStore('config',{
+    state: () => ({
+        backUrl : 'http://localhost:8081',
+    })
+})
+
 export const useUserStore = defineStore('user', {
     state: () => ({
         FormLogin: false,
@@ -59,4 +65,28 @@ export const usePostStore = defineStore('post', {
             }
         }
     },
+});
+
+// 새로운 EpisodeStore 추가
+export const useEpisodeStore = defineStore('episode', {
+    state: () => ({
+        episodes: [],
+        mainTitleDescription: '',
+        currentMovie: {},
+        isModalVisible: false
+    }),
+    actions: {
+        async fetchEpisodes(id) {
+            try {
+                const response = await axios.get(`${useConfigStore().backUrl}/api/animation/episode/${id}`);
+                this.episodes = response.data.episode;
+                this.mainTitleDescription = response.data.uploadMainTitleEntity.mainTitleDescription;
+                this.currentMovie = response.data.uploadMainTitleEntity;
+                this.isModalVisible = true;
+                console.log("isModalVisible:", this.isModalVisible);
+            } catch (e) {
+                console.error('Error fetching episodes:', e);
+            }
+        }
+    }
 });

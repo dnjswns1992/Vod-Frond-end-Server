@@ -1,10 +1,19 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { resolve } from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  server : {
-    host : '0.0.0.0',
-    port : 5173,
-  }, plugins: [vue()],
-})
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
+  optimizeDeps: {
+    include: ['video.js', 'videojs-resolution-switcher', 'videojs-contrib-quality-levels']
+  },
+});

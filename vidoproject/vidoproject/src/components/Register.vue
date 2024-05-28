@@ -2,8 +2,17 @@
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
       <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">회원 가입</h2>
-      <form @submit.prevent="submitForm">
+      <form @submit.prevent="submitForm" enctype="multipart/form-data">
         <div class="space-y-4">
+          <div class="flex items-center justify-center">
+            <input id="profileImage" type="file" @change="previewImage" accept="image/*" class="hidden" />
+            <div class="relative w-16 h-16"> <!-- Adjusted width and height -->
+              <img :src="imageUrl" alt="Profile Image" class="w-full h-full object-cover rounded-full border border-gray-300 shadow-sm" />
+              <label for="profileImage" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white cursor-pointer rounded-full">
+                <span>업로드</span>
+              </label>
+            </div>
+          </div>
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">이메일</label>
             <input id="email" type="email" v-model="email" @blur="checkDuplicateEmail" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="이메일을 입력하세요" />
@@ -59,7 +68,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, watch } from 'vue';
 import axios from 'axios';
@@ -74,6 +82,8 @@ const gender = ref('');
 const agree = ref(false);
 const passwordError = ref('');
 const isPassWordCheck = ref(false);
+const profileImage = ref(null);
+const imageUrl = ref(''); // To store the selected image URL
 
 /* 사용자 로그인 중복 체크 */
 
@@ -128,6 +138,18 @@ const checkDuplicateNickname = async () => {
   }
 };
 
+const previewImage = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imageUrl.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    profileImage.value = file;
+  }
+};
+
 const submitForm = async () => {
   validatePassword();
   if (!isPassWordCheck.value) {
@@ -146,12 +168,21 @@ const submitForm = async () => {
   }
 
   try {
-    const response = await axios.post('http://localhost:8081/register', {
+    const formData = new FormData();
+    const dto = {
       email: email.value,
       username: username.value,
       password: password.value,
-      gender: gender.value,
       nickname: nickname.value,
+      gender: gender.value
+    };
+    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+    formData.append('image', profileImage.value);
+
+    const response = await axios.post('http://localhost:8081/register', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
 
     if (response.status === 200) {
@@ -261,5 +292,30 @@ button {
 .alert-success {
   background-color: #d4edda;
   color: #155724;
+}
+
+/* Profile image preview styling */
+#profileImage {
+  display: none;
+}
+
+.relative {
+  position: relative;
+}
+
+.rounded-full {
+  border-radius: 50%;
+}
+
+.object-cover {
+  object-fit: cover;
+}
+
+.absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 </style>

@@ -41,12 +41,12 @@
             <button @click="userStore.toggleModal" type="button" class="mr-4 relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
               <span class="absolute -inset-1.5"></span>
               <span class="sr-only">Open user menu</span>
-              <img class="h-8 w-8 rounded-full" src="https://i.namu.wiki/i/eFb4WQiCqn_eR20aTLkki2_mdvVS6qGirWP9tbtTBHZn35yQ6Wo_MjB1UVNFviZqBemJp2J0mgyq0bzS-SawZNtCsMcOYQG7oi0wM9Y3ezqmejyUSH6Q1XhqrmumYvxTI69m2DjX8NGBw-4J_ntITw.webp" alt="User Image">
+              <img class="h-8 w-8 rounded-full" :src="userStore.user.imageUrl" alt="User Image">
             </button>
             <!-- Dropdown menu -->
             <div v-if="userStore.isModal" class="absolute right--1 z-10 mt-2 w-64 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
               <div class="p-4 border-b">
-                <img class="h-8 w-8 rounded-full" src="https://i.namu.wiki/i/eFb4WQiCqn_eR20aTLkki2_mdvVS6qGirWP9tbtTBHZn35yQ6Wo_MjB1UVNFviZqBemJp2J0mgyq0bzS-SawZNtCsMcOYQG7oi0wM9Y3ezqmejyUSH6Q1XhqrmumYvxTI69m2DjX8NGBw-4J_ntITw.webp" alt="User Image">
+                <img class="h-8 w-8 rounded-full" :src="userStore.user.imageUrl" alt="User Image">
                 <br>
                 <div class="font-bold text-gray-900">{{ userStore.user.nickName }}</div>
                 <div class="text-sm text-gray-600">{{ userStore.user.email }}</div>

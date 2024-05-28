@@ -14,6 +14,11 @@
       </div>
 
       <div class="form-group">
+        <label for="description" class="label">Description</label>
+        <textarea id="description" v-model="mainTitleDescription" class="textarea" rows="4" required></textarea>
+      </div>
+
+      <div class="form-group">
         <label class="label">Season</label>
         <div class="dropdown" @click="toggleDropdown('season')">
           <div class="dropdown-selected">{{ selectedSeason || 'Select a season' }}</div>
@@ -70,6 +75,18 @@
       </div>
 
       <div class="form-group">
+        <label class="label">Type</label>
+        <div class="dropdown" @click="toggleDropdown('type')">
+          <div class="dropdown-selected">{{ selectedType || 'Select a type' }}</div>
+          <div class="dropdown-options" v-if="dropdownOpen.type">
+            <div class="dropdown-option" v-for="type in types" :key="type" @click="selectType(type)">
+              {{ type }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
         <label for="title" class="label">에피소드 번호</label>
         <input type="text" id="title" v-model="episodeNumber" class="input" required>
       </div>
@@ -80,6 +97,11 @@
       <div class="form-group">
         <label for="video" class="label">Upload Video</label>
         <input type="file" id="video" @change="handleVideoUpload" class="input-file" accept="video/*" required>
+      </div>
+
+      <div class="form-group">
+        <label for="image" class="label">Upload Image</label>
+        <input type="file" id="image" @change="handleImageUpload" class="input-file" accept="image/*" required>
       </div>
 
       <div class="form-group">
@@ -98,7 +120,8 @@ import axios from 'axios';
 
 const episodeNumber = ref('');
 const title = ref('');
-const description = ref(''); // New description ref
+const mainTitleDescription = ref(''); // Corrected case to match the DTO
+const description = ref('');
 const selectedCategory = ref('');
 const selectedSeason = ref('');
 const selectedType = ref('');
@@ -161,10 +184,12 @@ const submitForm = async () => {
     title: title.value,
     episodeNumber: episodeNumber.value,
     description: description.value,
+    genre: selectedType.value,  // 장르 선택 추가
   };
 
-  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], {type: "application/json"}));
+  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], { type: "application/json" }));
   formData.append('video', videoFile.value);
+  formData.append('Image', imageFile.value);  // 이미지 파일 추가
 
   try {
     const token = localStorage.getItem("jwt");
@@ -184,14 +209,13 @@ const submitForm = async () => {
   }
 };
 
-
-
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
   const formData = new FormData();
   const mainTitleDto = {
     title: title.value,
     season: selectedSeason.value,
+    mainTitleDescription: mainTitleDescription.value, // Ensure correct case
     category: selectedCategory.value,
     genre: selectedType.value,
   };
