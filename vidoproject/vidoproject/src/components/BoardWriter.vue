@@ -25,7 +25,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '../assets/store.js';
+import {useConfigStore, useUserStore} from '../assets/store.js';
 
 const title = ref('');
 const author = ref('');
@@ -33,11 +33,11 @@ const content = ref('');
 const isUserLoggedIn = ref(false);
 const router = useRouter();
 const userStore = useUserStore();
+const backUrl = useConfigStore();
 
 onMounted(async () => {
   const jwtToken = localStorage.getItem('jwt');
   const isCheckLogin = localStorage.getItem('ischeckLogin') === 'true';
-
   if (!jwtToken && !isCheckLogin) {
     alert('로그인을 해주세요.');
     await router.push('/login');
@@ -65,7 +65,7 @@ const submitPost = async () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8081/user/createPost' , {
+      const response = await fetch(`${backUrl}/user/createPost` , {
         method: 'POST',
         headers : {
           'Content-Type': 'application/json',

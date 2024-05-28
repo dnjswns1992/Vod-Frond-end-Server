@@ -2,35 +2,44 @@
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
       <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">회원 가입</h2>
-      <form @submit.prevent="submitForm">
+      <form @submit.prevent="submitForm" enctype="multipart/form-data">
         <div class="space-y-4">
+          <div class="flex items-center justify-center">
+            <input id="profileImage" type="file" @change="previewImage" accept="image/*" class="hidden" />
+            <div class="relative w-16 h-16"> <!-- Adjusted width and height -->
+              <img :src="imageUrl" alt="Profile Image" class="w-full h-full object-cover rounded-full border border-gray-300 shadow-sm" />
+              <label for="profileImage" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white cursor-pointer rounded-full">
+                <span>업로드</span>
+              </label>
+            </div>
+          </div>
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">이메일</label>
-            <input id="email" type="email" v-model="email" @blur="checkDuplicateEmail" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="이메일을 입력하세요" />
+            <input id="email" type="email" v-model="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="이메일을 입력하세요" />
             <div v-if="DuplicateUserEmailCheck === false" class="alert alert-success"><span>{{ DuplicateUserEmail }}</span></div>
             <div v-if="DuplicateUserEmailCheck === true" class="alert alert-danger"><span>{{ DuplicateUserEmail }}</span></div>
           </div>
           <div>
             <label for="username" class="block text-sm font-medium text-gray-700">아이디</label>
-            <input id="username" type="text" v-model="username" @blur="checkDuplicateUsername" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="아이디를 입력하세요" />
+            <input id="username" type="text" v-model="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="아이디를 입력하세요" />
             <div v-if="DuplicateUserNameCheck === false" class="alert alert-success"><span>{{ DuplicateUserName }}</span></div>
             <div v-if="DuplicateUserNameCheck === true" class="alert alert-danger"><span>{{ DuplicateUserName }}</span></div>
           </div>
           <div>
             <label for="nickname" class="block text-sm font-medium text-gray-700">닉네임</label>
-            <input id="nickname" type="text" v-model="nickname" @blur="checkDuplicateNickname" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="닉네임을 입력하세요" />
+            <input id="nickname" type="text" v-model="nickname" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="닉네임을 입력하세요" />
             <div v-if="DuplicateUserNickNameCheck === false" class="alert alert-success"><span>{{ DuplicateUserNickName }}</span></div>
             <div v-if="DuplicateUserNickNameCheck === true" class="alert alert-danger"><span>{{ DuplicateUserNickName }}</span></div>
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">비밀번호</label>
-            <input id="password" type="password" v-model="password" @input="validatePassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="비밀번호를 입력하세요" />
+            <input id="password" type="password" v-model="password" @input="validatePassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm password-input" placeholder="비밀번호를 입력하세요" />
             <div v-if="isPassWordCheck === false" class="alert alert-danger mt-3" role="alert">{{ passwordError }}</div>
-            <div v-if="isPassWordCheck === true" class="alert alert-success mt-3" role="alert">{{ passwordError }}</div>
+            <div v-if="isPassWordCheck === true" class="alert alert-success mt-3 font-normal" role="alert">{{ passwordError }}</div>
           </div>
           <div>
             <label for="passwordCheck" class="block text-sm font-medium text-gray-700">비밀번호 확인</label>
-            <input id="passwordCheck" type="password" v-model="passwordCheck" @input="validatePassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="비밀번호를 다시 입력하세요" />
+            <input id="passwordCheck" type="password" v-model="passwordCheck" @input="validatePassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm password-input" placeholder="비밀번호를 다시 입력하세요" />
           </div>
           <div class="flex items-center space-x-4">
             <div class="flex items-center">
@@ -59,11 +68,11 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { useConfigStore, useUserStore } from "@/assets/store.js";
 
 const email = ref('');
 const username = ref('');
@@ -74,6 +83,8 @@ const gender = ref('');
 const agree = ref(false);
 const passwordError = ref('');
 const isPassWordCheck = ref(false);
+const profileImage = ref(null);
+const imageUrl = ref(''); // To store the selected image URL
 
 /* 사용자 로그인 중복 체크 */
 
@@ -83,6 +94,7 @@ const DuplicateUserEmail = ref('');
 const DuplicateUserEmailCheck = ref(false);
 const DuplicateUserName = ref('');
 const DuplicateUserNameCheck = ref(false);
+const backServer = useConfigStore();
 
 const router = useRouter();
 
@@ -98,33 +110,15 @@ const validatePassword = () => {
 };
 watch(password, validatePassword);
 
-const checkDuplicateEmail = async () => {
-  try {
-    const response = await axios.post('http://localhost:8081/check-email', { email: email.value });
-    DuplicateUserEmailCheck.value = response.data.exists;
-    DuplicateUserEmail.value = response.data.exists ? '사용중인 이메일 입니다.' : '사용가능한 이메일 입니다.';
-  } catch (error) {
-    console.error('Error checking email:', error);
-  }
-};
-
-const checkDuplicateUsername = async () => {
-  try {
-    const response = await axios.post('http://localhost:8081/check-username', { username: username.value });
-    DuplicateUserNameCheck.value = response.data.exists;
-    DuplicateUserName.value = response.data.exists ? '사용중인 아이디입니다.' : '사용가능한 아이디 입니다.';
-  } catch (error) {
-    console.error('Error checking username:', error);
-  }
-};
-
-const checkDuplicateNickname = async () => {
-  try {
-    const response = await axios.post('http://localhost:8081/check-nickname', { nickname: nickname.value });
-    DuplicateUserNickNameCheck.value = response.data.exists;
-    DuplicateUserNickName.value = response.data.exists ? '사용중인 닉네임 입니다.' : '사용가능한 닉네임 입니다.';
-  } catch (error) {
-    console.error('Error checking nickname:', error);
+const previewImage = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imageUrl.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    profileImage.value = file;
   }
 };
 
@@ -145,22 +139,41 @@ const submitForm = async () => {
     return;
   }
 
+  if (!profileImage.value) {
+    alert("프로필 이미지를 업로드하세요.");
+    return;
+  }
+
   try {
-    const response = await axios.post('http://localhost:8081/register', {
+    const formData = new FormData();
+    const dto = {
       email: email.value,
       username: username.value,
       password: password.value,
-      gender: gender.value,
       nickname: nickname.value,
+      gender: gender.value
+    };
+    formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
+    formData.append('image', profileImage.value);
+
+    const response = await axios.post(`${backServer.backUrl}/register`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
+    console.log('Response:', response);
 
     if (response.status === 200) {
       alert("회원가입이 완료되었습니다.");
       await router.push('/');
+    } else {
+      console.error('Unexpected response:', response);
     }
   } catch (error) {
+    console.error('Error during registration:', error);
+
     if (error.response && error.response.status === 409) {
-      const errorMessage = error.response.data.message || error.response.data; // 에러 메시지가 객체 안에 있는 경우를 처리
+      const errorMessage = error.response.data.message || error.response.data;
 
       if (errorMessage.includes("NickName Duplicate")) {
         DuplicateUserNickName.value = '사용중인 닉네임 입니다.';
@@ -262,4 +275,43 @@ button {
   background-color: #d4edda;
   color: #155724;
 }
+
+/* Profile image preview styling */
+#profileImage {
+  display: none;
+}
+
+.relative {
+  position: relative;
+}
+
+.rounded-full {
+  border-radius: 50%;
+}
+
+.object-cover {
+  object-fit: cover;
+}
+
+.absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.password-input {
+  font-family: Arial, sans-serif !important; /* 비밀번호 필드에 다른 폰트 적용 */
+}
 </style>
+
+@font-face {
+font-family: 'Baedal';
+src: url('./assets/fonts/BMJUA_ttf.ttf') format('truetype');
+font-weight: normal;
+font-style: normal;
+}
+
+body {
+font-family: 'Baedal', sans-serif;
+}

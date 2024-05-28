@@ -2,13 +2,17 @@
   <div class="swiper-container">
     <swiper :modules="[Navigation, Pagination,Autoplay]" navigation pagination autoplay :autoplay="{delay : 3000}" class="mySwiper">
       <swiper-slide>
-        <img src="../assets/image/SilderImgage/img.png" alt="Image 1" class="slide-image">
+        <img src="../assets/image/SilderImgage/title01.png" alt="Image 1" class="slide-image">
       </swiper-slide>
       <swiper-slide>
-        <img src="../assets/image/SilderImgage/img_8.png" alt="Image 2" class="slide-image">
+        <img src="../assets/image/SilderImgage/title02.png" alt="Image 2" class="slide-image">
       </swiper-slide>
       <swiper-slide>
-        <img src="../assets/image/SilderImgage/img_9.png" alt="Image 3" class="slide-image">
+        <img src="../assets/image/SilderImgage/Title.png" alt="Image 3" class="slide-image">
+      </swiper-slide>
+
+      <swiper-slide>
+        <img src="../assets/image/SilderImgage/title03.png" alt="Image 3" class="slide-image">
       </swiper-slide>
       <!-- 필요한 만큼 슬라이드를 추가하세요 -->
     </swiper>

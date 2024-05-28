@@ -9,6 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rollup/plugin-commonjs": "^25.0.8",
+    "socket.io-client": "^4.7.5",
+    "videojs-resolution-switcher": "^0.4.2",
     "vue": "^3.4.21"
   },
   "devDependencies": {

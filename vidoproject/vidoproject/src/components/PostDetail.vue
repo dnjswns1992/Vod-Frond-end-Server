@@ -55,7 +55,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
-import { useUserStore } from '../assets/store.js'; // Pinia 스토어 사용
+import {useConfigStore, useUserStore} from '../assets/store.js'; // Pinia 스토어 사용
 
 const isLoggedIn = ref(localStorage.getItem('isLogin') === 'true');
 const newComment = ref('');
@@ -72,13 +72,13 @@ const post = ref({
 });
 
 const comments = ref([]); // 빈 배열로 초기화
-
 const userStore = useUserStore();
+const backUrl = useConfigStore();
 
 onMounted(async () => {
   const postId = route.params.id;
   try {
-    const response = await axios.get(`http://localhost:8081/user/postDetail/${postId}`);
+    const response = await axios.get(`${backUrl}/user/postDetail/${postId}`);
     if (response.status === 200) {
       post.value = response.data.dto;
       console.log(post.value);
@@ -90,7 +90,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await axios.get(`http://localhost:8081/user/comment/bring/${postId}`);
+    const response = await axios.get(`${backUrl}/user/comment/bring/${postId}`);
     if (response.status === 200) {
       console.log(response.data);
       comments.value = response.data;
@@ -116,7 +116,7 @@ const submitComment = async () => {
 
   // 서버로 댓글 데이터 전송
   try {
-    const response = await axios.post(`http://localhost:8081/user/comment/write/${route.params.id}`, commentDto, {
+    const response = await axios.post(`${backUrl}/${route.params.id}`, commentDto, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('jwt')}`
@@ -140,7 +140,7 @@ const submitComment = async () => {
 
 const deleteComment = async (commentId) => {
   try {
-    const response = await axios.delete(`http://localhost:8081/user/comment/remove/${commentId}`, {
+    const response = await axios.delete(`${backUrl}/user/comment/remove/${commentId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt')}`
       }

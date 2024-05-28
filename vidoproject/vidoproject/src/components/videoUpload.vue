@@ -14,6 +14,11 @@
       </div>
 
       <div class="form-group">
+        <label for="description" class="label">Description</label>
+        <textarea id="description" v-model="mainTitleDescription" class="textarea" rows="4" required></textarea>
+      </div>
+
+      <div class="form-group">
         <label class="label">Season</label>
         <div class="dropdown" @click="toggleDropdown('season')">
           <div class="dropdown-selected">{{ selectedSeason || 'Select a season' }}</div>
@@ -50,9 +55,15 @@
       </div>
 
       <div class="form-group">
-        <label for="image" class="label">Upload Image</label>
+        <label for="image" class="label">Main Title Image(이미지 슬라이더)</label>
+        <input type="file" id="image" @change="handleMainTitleUpload" class="input-file" accept="image/*" required>
+      </div>
+
+      <div class="form-group">
+        <label for="image" class="label">Upload HomeTitle</label>
         <input type="file" id="image" @change="handleImageUpload" class="input-file" accept="image/*" required>
       </div>
+
       <div class="form-group">
         <button class="custom-btn btn-1 button" type="submit">메인 타이틀 등록</button>
       </div>
@@ -63,10 +74,21 @@
 
     <!-- 에피소드 등록 폼 -->
     <form @submit.prevent="submitForm" class="form" v-if="uploadType === 'episode'">
-
       <div class="form-group">
         <label for="title" class="label">Title</label>
         <input type="text" id="title" v-model="title" class="input" required>
+      </div>
+
+      <div class="form-group">
+        <label class="label">Type</label>
+        <div class="dropdown" @click="toggleDropdown('type')">
+          <div class="dropdown-selected">{{ selectedType || 'Select a type' }}</div>
+          <div class="dropdown-options" v-if="dropdownOpen.type">
+            <div class="dropdown-option" v-for="type in types" :key="type" @click="selectType(type)">
+              {{ type }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -83,6 +105,16 @@
       </div>
 
       <div class="form-group">
+        <label for="image" class="label">Main Title Image</label>
+        <input type="file" id="image" @change="handleImageUpload" class="input-file" accept="image/*" required>
+      </div>
+
+<!--      <div class="form-group">-->
+<!--        <label for="subtitle" class="label">Upload Subtitles</label>-->
+<!--        <input type="file" id="subtitle" @change="handleSubtitleUpload" class="input-file" accept=".srt,.vtt" required>-->
+<!--      </div>-->
+
+      <div class="form-group">
         <button type="submit" class="button">에피소드 등록</button>
       </div>
       <div class="progress-bar" v-if="progress > 0">
@@ -95,10 +127,17 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+// @/assets/webSocket.js
+import webSocket from '../assets/webSocket.js';
+import {useConfigStore} from "../assets/store.js";
+import * as events from "node:events";
+
+const { createWebSocketConnection } = webSocket;
 
 const episodeNumber = ref('');
 const title = ref('');
-const description = ref(''); // New description ref
+const mainTitleDescription = ref('');
+const description = ref('');
 const selectedCategory = ref('');
 const selectedSeason = ref('');
 const selectedType = ref('');
@@ -110,27 +149,24 @@ const uploadType = ref(null);
 const seasons = ref(['season 1', 'season 2', 'season 3', 'season 4', 'season 5']);
 const categories = ref(['액션', '로맨스', '잔잔', '추리']);
 const types = ref(['애니', '드라마', '영화']);
+const backServer = useConfigStore();
+const mainTitleImage = ref(null);
+
+// const subtitleFile = ref(null);
 
 const toggleDropdown = (type) => {
-  if (type === 'season') {
-    dropdownOpen.value.season = !dropdownOpen.value.season;
-    dropdownOpen.value.category = false;
-    dropdownOpen.value.type = false;
-  } else if (type === 'category') {
-    dropdownOpen.value.category = !dropdownOpen.value.category;
-    dropdownOpen.value.season = false;
-    dropdownOpen.value.type = false;
-  } else if (type === 'type') {
-    dropdownOpen.value.type = !dropdownOpen.value.type;
-    dropdownOpen.value.season = false;
-    dropdownOpen.value.category = false;
-  }
+  dropdownOpen.value[type] = !dropdownOpen.value[type];
 };
 
 const selectSeason = (season) => {
   selectedSeason.value = season;
   dropdownOpen.value.season = false;
 };
+
+
+// const handleSubtitleUpload = (event) => {
+//   subtitleFile.value = event.target.files[0];
+// };
 
 const selectCategory = (category) => {
   selectedCategory.value = category;
@@ -153,6 +189,10 @@ const handleVideoUpload = (event) => {
 const handleImageUpload = (event) => {
   imageFile.value = event.target.files[0];
 };
+const handleMainTitleUpload = (event) => {
+  mainTitleImage.value = event.target.files[0];
+  console.log(mainTitleImage.value);
+}
 
 // 에피소드 등록 폼 제출 함수
 const submitForm = async () => {
@@ -161,20 +201,38 @@ const submitForm = async () => {
     title: title.value,
     episodeNumber: episodeNumber.value,
     description: description.value,
+    genre: selectedType.value,
   };
 
-  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], {type: "application/json"}));
+  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], { type: "application/json" }));
   formData.append('video', videoFile.value);
+  formData.append('Image', imageFile.value);
+
+  // formData.append(("subtitle"), subtitleFile.value);
+
 
   try {
     const token = localStorage.getItem("jwt");
-    const response = await axios.post('http://localhost:8081/api/file/video/upload', formData, {
+    const sessionId = generateSessionId(); // 세션 ID 생성
+
+    // WebSocket 연결 설정
+    //웹 소켓을 사용하기 위해선 http://를 지워야함
+    const socket = createWebSocketConnection(`ws://localhost:8081/ws/video-progress`, sessionId);
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ action: 'registerSession', sessionId }));
+    };
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'progress') {
+        progress.value = data.progress;
+      }
+    };
+
+    const response = await axios.post(`${backServer.backUrl}/api/file/video/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`
-      },
-      onUploadProgress: (progressEvent) => {
-        progress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        'Authorization': `Bearer ${token}`,
+        'Session-Id': sessionId
       }
     });
     alert('Upload successful!');
@@ -184,24 +242,24 @@ const submitForm = async () => {
   }
 };
 
-
-
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
   const formData = new FormData();
   const mainTitleDto = {
     title: title.value,
     season: selectedSeason.value,
+    mainTitleDescription: mainTitleDescription.value,
     category: selectedCategory.value,
     genre: selectedType.value,
   };
 
   formData.append('mainTitleDto', new Blob([JSON.stringify(mainTitleDto)], {type: "application/json"}));
   formData.append('Image', imageFile.value);
+  formData.append('mainTitleImage', mainTitleImage.value);
 
   try {
     const token = localStorage.getItem("jwt");
-    const response = await axios.post('http://localhost:8081/api/mainTitle/upload', formData, {
+    const response = await axios.post(`${backServer.backUrl}/api/mainTitle/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`
@@ -216,7 +274,13 @@ const mainTitleSubmit = async () => {
     alert('Error uploading the main title');
   }
 };
+
+// 유니크한 세션 ID 생성 함수
+const generateSessionId = () => {
+  return '_' + Math.random().toString(36).substr(2, 9);
+};
 </script>
+
 
 <style scoped>
 .container {

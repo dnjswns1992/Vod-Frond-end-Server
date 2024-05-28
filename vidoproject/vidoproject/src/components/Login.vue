@@ -13,7 +13,7 @@
               <label for="input-pass" class="login__label font-semibold">패스워드</label>
               <div class="login__box">
                 <input type="password" v-model="password" placeholder="패스워드를 입력해주세요." required class="login__input" id="input-pass">
-                <i class="ri-eye-off-line login__eye" id="input-icon"></i>
+                <i class="ri-eye-off-line login__eye font-normal" id="input-icon"></i>
               </div>
             </div>
           </div>
@@ -42,24 +42,25 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { useUserStore } from "../assets/store.js";
+import { useConfigStore, useUserStore } from "../assets/store.js";
 import router from "../router/router.js";
 
 const username = ref('');
 const password = ref('');
 const userStore = useUserStore();
+const backServer = useConfigStore();
 
 const redirectToGoogle = () => {
-  window.location.href = 'http://localhost:8081/oauth2/authorization/google';
+  window.location.href = `${backServer.backUrl}/oauth2/authorization/google`;
 };
 
 const redirectToNaver = () => {
-  window.location.href = 'http://localhost:8081/oauth2/authorization/naver';
+  window.location.href = `${backServer.backUrl}/oauth2/authorization/naver`;
 };
 
 const submitForm = async () => {
   try {
-    const response = await axios.post('http://localhost:8081/login', {
+    const response = await axios.post(`${backServer.backUrl}/login`, {
       username: username.value,
       password: password.value
     }, {
@@ -81,7 +82,8 @@ const submitForm = async () => {
     if (error.response && error.response.status === 401) {
       alert('아이디 또는 비밀번호가 맞지 않습니다.');
     } else {
-      console.error(error);
+      console.error('로그인 실패:', error);
+      alert('로그인 중 오류가 발생했습니다. 다시 시도해 주세요.');
     }
   }
 };

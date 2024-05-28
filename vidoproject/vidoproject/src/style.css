@@ -145,3 +145,14 @@
 .btn-8 span:hover:after {
     width: 100%;
 }
+
+@font-face {
+    font-family: 'Baedal';
+    src: url('./assets/fonts/BMJUA_ttf.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Baedal', sans-serif;
+}
