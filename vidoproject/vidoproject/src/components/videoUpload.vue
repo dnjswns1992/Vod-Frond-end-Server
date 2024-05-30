@@ -196,6 +196,12 @@ const handleMainTitleUpload = (event) => {
 
 // 에피소드 등록 폼 제출 함수
 const submitForm = async () => {
+
+  if (!title.value || !episodeNumber.value || !description.value || !selectedType.value || !videoFile.value || !imageFile.value) {
+    alert('모든 값을 입력하십시오.');
+    return;
+  }
+
   const formData = new FormData();
   const videoDto = {
     title: title.value,
@@ -244,6 +250,11 @@ const submitForm = async () => {
 
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
+
+  if (!title.value || !episodeNumber.value || !description.value || !selectedType.value || !videoFile.value || !imageFile.value) {
+    alert('모든 값을 입력하십시오.');
+    return;
+  }
   const formData = new FormData();
   const mainTitleDto = {
     title: title.value,
