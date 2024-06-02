@@ -8,7 +8,7 @@
       <br>
       <h3 class="ml-12">줄거리</h3>
       <br>
-      <p class="fs-p ml-12" v-html="mainTitle.mainTitleDescription"></p>
+      <h5 class="fs-p ml-12" v-html="mainTitle.mainTitleDescription"></h5>
 
     </div>
     <br><br><br>

@@ -33,7 +33,7 @@ const content = ref('');
 const isUserLoggedIn = ref(false);
 const router = useRouter();
 const userStore = useUserStore();
-const backUrl = useConfigStore();
+const backServer = useConfigStore();
 
 onMounted(async () => {
   const jwtToken = localStorage.getItem('jwt');
@@ -65,7 +65,7 @@ const submitPost = async () => {
     };
 
     try {
-      const response = await fetch(`${backUrl}/user/createPost` , {
+      const response = await fetch(`${backServer.backUrl}/user/createPost` , {
         method: 'POST',
         headers : {
           'Content-Type': 'application/json',

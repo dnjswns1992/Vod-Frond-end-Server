@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h1 class="title">Upload Your Video</h1>
+    <h1 class="title">Upload Your Video or Audio</h1>
     <div class="upload-options">
       <button class="upload-option btn-7" @click="setUploadType('main')">메인 타이틀 등록하기</button>
       <button class="upload-option btn-8" @click="setUploadType('episode')">에피소드 등록하기</button>
@@ -100,8 +100,8 @@
         <textarea id="description" v-model="description" class="textarea" rows="4" required></textarea>
       </div>
       <div class="form-group">
-        <label for="video" class="label">Upload Video</label>
-        <input type="file" id="video" @change="handleVideoUpload" class="input-file" accept="video/*" required>
+        <label for="video" class="label">Upload Video or Audio</label>
+        <input type="file" id="video" @change="handleVideoUpload" class="input-file" accept="video/*,audio/*,.mkv,.mp3" required>
       </div>
 
       <div class="form-group">
@@ -109,10 +109,10 @@
         <input type="file" id="image" @change="handleImageUpload" class="input-file" accept="image/*" required>
       </div>
 
-<!--      <div class="form-group">-->
-<!--        <label for="subtitle" class="label">Upload Subtitles</label>-->
-<!--        <input type="file" id="subtitle" @change="handleSubtitleUpload" class="input-file" accept=".srt,.vtt" required>-->
-<!--      </div>-->
+      <div class="form-group">
+        <label for="subtitle" class="label">Upload Subtitles</label>
+        <input type="file" id="subtitle" @change="handleSubtitleUpload" class="input-file" accept=".srt,.vtt">
+      </div>
 
       <div class="form-group">
         <button type="submit" class="button">에피소드 등록</button>
@@ -127,10 +127,8 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-// @/assets/webSocket.js
 import webSocket from '../assets/webSocket.js';
-import {useConfigStore} from "../assets/store.js";
-import * as events from "node:events";
+import { useConfigStore } from "../assets/store.js";
 
 const { createWebSocketConnection } = webSocket;
 
@@ -151,8 +149,7 @@ const categories = ref(['액션', '로맨스', '잔잔', '추리']);
 const types = ref(['애니', '드라마', '영화']);
 const backServer = useConfigStore();
 const mainTitleImage = ref(null);
-
-// const subtitleFile = ref(null);
+const subtitleFile = ref(null);
 
 const toggleDropdown = (type) => {
   dropdownOpen.value[type] = !dropdownOpen.value[type];
@@ -162,11 +159,6 @@ const selectSeason = (season) => {
   selectedSeason.value = season;
   dropdownOpen.value.season = false;
 };
-
-
-// const handleSubtitleUpload = (event) => {
-//   subtitleFile.value = event.target.files[0];
-// };
 
 const selectCategory = (category) => {
   selectedCategory.value = category;
@@ -189,69 +181,132 @@ const handleVideoUpload = (event) => {
 const handleImageUpload = (event) => {
   imageFile.value = event.target.files[0];
 };
+
 const handleMainTitleUpload = (event) => {
   mainTitleImage.value = event.target.files[0];
-  console.log(mainTitleImage.value);
-}
+};
 
-// 에피소드 등록 폼 제출 함수
+const handleSubtitleUpload = (event) => {
+  subtitleFile.value = event.target.files[0];
+};
 const submitForm = async () => {
-
-  if (!title.value || !episodeNumber.value || !description.value || !selectedType.value || !videoFile.value || !imageFile.value) {
-    alert('모든 값을 입력하십시오.');
+  if (!videoFile.value) {
+    alert('파일을 선택하십시오.');
     return;
   }
 
-  const formData = new FormData();
-  const videoDto = {
-    title: title.value,
-    episodeNumber: episodeNumber.value,
-    description: description.value,
-    genre: selectedType.value,
-  };
-
-  formData.append('videoDto', new Blob([JSON.stringify(videoDto)], { type: "application/json" }));
-  formData.append('video', videoFile.value);
-  formData.append('Image', imageFile.value);
-
-  // formData.append(("subtitle"), subtitleFile.value);
-
-
   try {
     const token = localStorage.getItem("jwt");
-    const sessionId = generateSessionId(); // 세션 ID 생성
+    const filename = videoFile.value.name; // 인코딩 없이 원본 파일 이름 사용
 
-    // WebSocket 연결 설정
-    //웹 소켓을 사용하기 위해선 http://를 지워야함
-    const socket = createWebSocketConnection(`ws://localhost:8081/ws/video-progress`, sessionId);
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ action: 'registerSession', sessionId }));
-    };
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'progress') {
-        progress.value = data.progress;
+    console.log("Starting multipart upload for:", filename);
+
+    // Create multipart upload
+    const createResponse = await axios.get(`${backServer.backUrl}/api/s3/create-multipart-upload`, {
+      params: { fileName: encodeURIComponent(filename) }, // 여기는 인코딩된 파일 이름 사용
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    console.log("Multipart upload created:", createResponse.data);
+
+    const { uploadId } = createResponse.data;
+    const partSize = 5 * 1024 * 1024; // 5MB
+    const parts = [];
+
+    for (let start = 0, partNumber = 1; start < videoFile.value.size; start += partSize, partNumber++) {
+      const end = Math.min(start + partSize, videoFile.value.size);
+      const partBlob = videoFile.value.slice(start, end);
+
+      // Get presigned URL for the part
+      const presignPartResponse = await axios.get(`${backServer.backUrl}/api/s3/generate-presigned-url`, {
+        params: { fileName: encodeURIComponent(filename), partNumber: partNumber, uploadId: uploadId }, // 여기도 인코딩된 파일 이름 사용
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      console.log(`Presigned URL for part ${partNumber}:`, presignPartResponse.data);
+
+      const partPresignedUrl = presignPartResponse.data;
+      const uploadResponse = await fetch(partPresignedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
+        body: partBlob
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error(`Error uploading part ${partNumber}:`, errorText);
+        throw new Error(`Part upload failed: ${errorText}`);
       }
+
+      console.log(`Part ${partNumber} uploaded successfully.`);
+
+      // Get and check ETag value
+      let eTag = uploadResponse.headers.get('ETag');
+      console.log(`ETag for part ${partNumber}:`, eTag); // ETag 값 로그 출력
+      if (eTag) {
+        eTag = eTag.replace(/"/g, ''); // Remove any double quotes from the ETag
+        parts.push({ ETag: eTag, PartNumber: partNumber });
+      } else {
+        console.error(`ETag is null for part ${partNumber}`);
+        alert(`ETag is null for part ${partNumber}`);
+        throw new Error(`ETag is null for part ${partNumber}`);
+      }
+
+      // Update progress
+      progress.value = Math.round((start + partSize) / videoFile.value.size * 100);
+    }
+
+    console.log("All parts uploaded, completing multipart upload.");
+    console.log('Completed parts:', parts); // completedParts 로그 출력
+
+    // Complete multipart upload
+    await axios.post(`${backServer.backUrl}/api/s3/complete-multipart-upload`, {
+      fileName: encodeURIComponent(filename), // 여기도 인코딩된 파일 이름 사용
+      uploadId: uploadId,
+      completedParts: parts
+    }, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    // Generate the full video URL
+    const bucketUrl = "https://videoserver-static-files.s3.ap-northeast-2.amazonaws.com/";
+    const encodedFilename = encodeURIComponent(filename); // 인코딩된 파일 이름 사용
+    const videoUrl = `${bucketUrl}${encodedFilename}`; // 인코딩된 파일 이름 사용
+
+    // Upload metadata and files
+    const videoDto = {
+      title: title.value,
+      episodeNumber: episodeNumber.value,
+      ImageUrl: '', // Set this after uploading the image
+      videoUrl: videoUrl,
+      description: description.value,
+      genre: selectedType.value
     };
 
-    const response = await axios.post(`${backServer.backUrl}/api/file/video/upload`, formData, {
+    const formData = new FormData();
+    formData.append('videoDto', new Blob([JSON.stringify(videoDto)], { type: "application/json" }));
+    formData.append('Image', imageFile.value);
+    if (subtitleFile.value) {
+      formData.append('subtitle', subtitleFile.value);
+    }
+
+    await axios.post(`${backServer.backUrl}/api/file/video/save-metadata`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`,
-        'Session-Id': sessionId
+        'Content-Type': 'multipart/form-data'
       }
     });
+
     alert('Upload successful!');
   } catch (error) {
     console.error('Error uploading the file', error);
     alert('Error uploading the file');
   }
 };
-
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
-
-
   const formData = new FormData();
   const mainTitleDto = {
     title: title.value,
@@ -261,7 +316,7 @@ const mainTitleSubmit = async () => {
     genre: selectedType.value,
   };
 
-  formData.append('mainTitleDto', new Blob([JSON.stringify(mainTitleDto)], {type: "application/json"}));
+  formData.append('mainTitleDto', new Blob([JSON.stringify(mainTitleDto)], { type: "application/json" }));
   formData.append('Image', imageFile.value);
   formData.append('mainTitleImage', mainTitleImage.value);
 
@@ -287,8 +342,8 @@ const mainTitleSubmit = async () => {
 const generateSessionId = () => {
   return '_' + Math.random().toString(36).substr(2, 9);
 };
+console.log("퍼센트",progress);
 </script>
-
 
 <style scoped>
 .container {

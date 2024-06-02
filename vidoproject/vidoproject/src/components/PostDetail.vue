@@ -5,7 +5,7 @@
       <div class="post-meta flex justify-between items-center">
         <div class="author-info flex items-center">
           <div class="author-avatar flex items-center mr-2">
-            <img src="https://i.namu.wiki/i/eFb4WQiCqn_eR20aTLkki2_mdvVS6qGirWP9tbtTBHZn35yQ6Wo_MjB1UVNFviZqBemJp2J0mgyq0bzS-SawZNtCsMcOYQG7oi0wM9Y3ezqmejyUSH6Q1XhqrmumYvxTI69m2DjX8NGBw-4J_ntITw.webp" alt="Author Avatar" class="rounded-full w-10 h-10">
+            <img :src="useDetail.imageUrl" alt="Author Avatar" class="rounded-full w-10 h-10">
             <span class="post-author userId ml-2 text-black">{{ post.nickname }}</span>
           </div>
           <div class="ml-4">
@@ -56,8 +56,8 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import {useConfigStore, useUserStore} from '../assets/store.js'; // Pinia 스토어 사용
-
 const isLoggedIn = ref(localStorage.getItem('isLogin') === 'true');
+const useDetail = ref({})
 const newComment = ref('');
 const route = useRoute();
 const post = ref({
@@ -73,12 +73,13 @@ const post = ref({
 
 const comments = ref([]); // 빈 배열로 초기화
 const userStore = useUserStore();
-const backUrl = useConfigStore();
+const backServer = useConfigStore();
 
 onMounted(async () => {
+  await userStore.fetchUserProfile();
   const postId = route.params.id;
   try {
-    const response = await axios.get(`${backUrl}/user/postDetail/${postId}`);
+    const response = await axios.get(`${backServer.backUrl}/user/postDetail/${postId}`);
     if (response.status === 200) {
       post.value = response.data.dto;
       console.log(post.value);
@@ -90,7 +91,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await axios.get(`${backUrl}/user/comment/bring/${postId}`);
+    const response = await axios.get(`${backServer.backUrl}/user/comment/bring/${postId}`);
     if (response.status === 200) {
       console.log(response.data);
       comments.value = response.data;
@@ -116,7 +117,7 @@ const submitComment = async () => {
 
   // 서버로 댓글 데이터 전송
   try {
-    const response = await axios.post(`${backUrl}/${route.params.id}`, commentDto, {
+    const response = await axios.post(`${backServer.backUrl}/user/comment/write/${route.params.id}`, commentDto, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('jwt')}`
@@ -140,7 +141,7 @@ const submitComment = async () => {
 
 const deleteComment = async (commentId) => {
   try {
-    const response = await axios.delete(`${backUrl}/user/comment/remove/${commentId}`, {
+    const response = await axios.delete(`${backServer.backUrl}/user/comment/remove/${commentId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('jwt')}`
       }
