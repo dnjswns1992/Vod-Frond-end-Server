@@ -92,6 +92,17 @@
       </div>
 
       <div class="form-group">
+      <label class="label">VideoType</label>
+      <div class="dropdown" @click="toggleDropdown('videoType')">
+        <div class="dropdown-selected">{{ videoType || '비디오 타입을 선택하세요.' }}</div>
+        <div class="dropdown-options" v-if="dropdownOpen.videoType">
+          <div class="dropdown-option" @click="selectVideoType('main')">main</div>
+          <div class="dropdown-option" @click="selectVideoType('prologue')">prologue</div>
+        </div>
+      </div>
+    </div>
+
+      <div class="form-group">
         <label for="title" class="label">에피소드 번호</label>
         <input type="text" id="title" v-model="episodeNumber" class="input" required>
       </div>
@@ -128,7 +139,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import webSocket from '../assets/webSocket.js';
-import { useConfigStore } from "../assets/store.js";
+import {useConfigStore, useUserStore} from "../assets/store.js";
 
 const { createWebSocketConnection } = webSocket;
 
@@ -142,7 +153,7 @@ const selectedType = ref('');
 const videoFile = ref(null);
 const imageFile = ref(null);
 const progress = ref(0);
-const dropdownOpen = ref({ season: false, category: false, type: false });
+const dropdownOpen = ref({ season: false, category: false, type: false , videoType : false });
 const uploadType = ref(null);
 const seasons = ref(['season 1', 'season 2', 'season 3', 'season 4', 'season 5']);
 const categories = ref(['액션', '로맨스', '잔잔', '추리']);
@@ -150,6 +161,14 @@ const types = ref(['애니', '드라마', '영화']);
 const backServer = useConfigStore();
 const mainTitleImage = ref(null);
 const subtitleFile = ref(null);
+const videoType = ref('');
+const userAuthorization = useUserStore()
+
+
+const selectVideoType = (type) => {
+  videoType.value = type;
+  dropdownOpen.value.videoType = false;
+};
 
 const toggleDropdown = (type) => {
   dropdownOpen.value[type] = !dropdownOpen.value[type];
@@ -194,6 +213,11 @@ const submitForm = async () => {
     alert('파일을 선택하십시오.');
     return;
   }
+  if(!userAuthorization.ROLE === 'ROLE_ADMIN') {
+    alert("권한이 없습니다.");
+    await router.push("/");
+  }
+
 
   try {
     const token = localStorage.getItem("jwt");
@@ -282,7 +306,8 @@ const submitForm = async () => {
       ImageUrl: '', // Set this after uploading the image
       videoUrl: videoUrl,
       description: description.value,
-      genre: selectedType.value
+      genre: selectedType.value,
+      videoType : videoType.value,
     };
 
     const formData = new FormData();
@@ -307,6 +332,12 @@ const submitForm = async () => {
 };
 // 메인 타이틀 등록 폼 제출 함수
 const mainTitleSubmit = async () => {
+
+  if(!userAuthorization.ROLE === 'ROLE_ADMIN') {
+    alert("권한이 없습니다.");
+    await router.push("/");
+  }
+
   const formData = new FormData();
   const mainTitleDto = {
     title: title.value,

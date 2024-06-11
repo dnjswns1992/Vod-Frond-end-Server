@@ -25,11 +25,13 @@
             <img :src="info.imageUrl"
                  class="w-full h-full object-cover hover:opacity-75 transition-opacity duration-200 fixed-size">
           </div>
-          <p class="mt-2 text-violet-400">{{ info.episodeNumber }}</p>
+          <p v-if="info" class="mt-2 text-violet-400">{{ info.episodeNumber }}</p>
           <p class="mt-2 fs">{{ info.description }}</p>
         </div>
+
       </div>
     </div>
+
   </div>
 </template>
 
@@ -37,21 +39,38 @@
 import {ref, onMounted} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import axios from 'axios';
-import {useConfigStore} from "../assets/store.js";
+import {useConfigStore, useUserStore} from "../assets/store.js";
 
 const mainTitle = ref(null);
 const episode = ref([]);
 const route = useRoute();
 const router = useRouter();
 const configStore = useConfigStore();
-
+let userAuthorization = useUserStore();
 onMounted(async () => {
+
+  console.log(userAuthorization);
   const id = route.query.id;
   if (id) {
     try {
-      const response = await axios.get(`${configStore.backUrl}/api/animation/episode/${id}`);
-      mainTitle.value = response.data.uploadMainTitleEntity;
-      episode.value = response.data.episode;
+
+      if (userAuthorization.ROLE === 'ROLE_ADMIN') {
+
+        const response = await axios.get(`${configStore.backUrl}/api/animation/episode/${id}`);
+        mainTitle.value = response.data.uploadMainTitleEntity;
+        episode.value = response.data.episode;
+
+        console.log(episode.value);
+        console.log(userAuthorization);
+      }
+      else if(userAuthorization.ROLE === 'ROLE_USER') {
+        const response = await axios.get(`${configStore.backUrl}/api/animation/episode/role_user/${id}`);
+        mainTitle.value = response.data.uploadMainTitleEntity;
+        episode.value = response.data.episode;
+      }else {
+        alert("권한이 없습니다!")
+        await router.push('/');
+      }
     } catch (error) {
       console.error('Failed to fetch movie details:', error);
     }
