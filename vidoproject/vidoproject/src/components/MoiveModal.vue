@@ -6,7 +6,7 @@
         <button @click="closeModal" class="text-black">X</button>
       </div>
       <div class="mt-4">
-        <img :src="movie.imgUrl" :alt="movie.title" class="w-full h-72 object-cover rounded-lg">
+        <img :src="movie.imageUrl" :alt="movie.title" class="w-full h-72 object-cover rounded-lg">
       </div>
       <div class="mt-4">
         <p>여기에 영화의 상세 정보가 들어갑니다.</p>

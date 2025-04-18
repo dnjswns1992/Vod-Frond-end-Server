@@ -15,7 +15,7 @@
 <script setup>
 import ImageSlider from './ImageSlider.vue';
 import Animation from './Animation.vue';
-import MoiveContent from "./MoiveContent.vue";
+import MoiveContent from "./Movie.vue";
 import Drama from "./Drama.vue";
 import EmailLogin from "./EmailLogin.vue";
 

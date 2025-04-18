@@ -67,7 +67,7 @@ export const usePostStore = defineStore('post', {
     },
 });
 
-// 새로운 EpisodeStore 추가
+// 애니메이션을 가져오는 Api
 export const useEpisodeStore = defineStore('episode', {
     state: () => ({
         episodes: [],
@@ -80,6 +80,32 @@ export const useEpisodeStore = defineStore('episode', {
             try {
                 const response = await axios.get(`${useConfigStore().backUrl}/api/animation/episode/${id}`);
                 this.episodes = response.data.episode;
+                this.mainTitleDescription = response.data.uploadMainTitleEntity.mainTitleDescription;
+                this.currentMovie = response.data.uploadMainTitleEntity;
+                this.isModalVisible = true;
+                console.log("isModalVisible:", this.isModalVisible);
+            } catch (e) {
+                console.error('Error fetching episodes:', e);
+            }
+        }
+    }
+
+});
+export const MovieEpisodeStore = defineStore('episode', {
+    state: () => ({
+        episodes: [],
+        mainTitleDescription: '',
+        currentMovie: {},
+        isModalVisible: false
+    }),
+    actions: {
+        async fetchEpisodes(id) {
+            try {
+                const response = await axios.get(`${useConfigStore().backUrl}/api/animation/episode/${id}`);
+
+                // 장르가 '영화'인 에피소드만 필터링
+                this.episodes = response.data.episode.filter(ep => ep.genre === '영화');
+
                 this.mainTitleDescription = response.data.uploadMainTitleEntity.mainTitleDescription;
                 this.currentMovie = response.data.uploadMainTitleEntity;
                 this.isModalVisible = true;

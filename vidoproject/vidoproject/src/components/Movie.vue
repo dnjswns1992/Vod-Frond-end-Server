@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <h1 class="text-black font-semibold text-2xl">애니메이션</h1>
+    <h1 class="text-black font-semibold text-2xl">영화</h1>
     <a href="#" class="absolute top-4 right-0 mt-2 mr-6 text-black font-semibold">더보기</a>
     <hr class="my-4">
     <div class="grid grid-cols-7 gap-1">
@@ -13,19 +13,17 @@
         <p class="mt-2 text-center text-black font-semibold">{{ movie.title }}</p>
       </div>
     </div>
-    <!-- 업로드 진행 상황 표시 -->
-    <div v-if="uploadProgress > 0" class="progress-container">
-      <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import {ref, computed, onMounted} from 'vue';
+import axios from 'axios';
 import fetchAnimationData from '../assets/animation.js';
-import MovieEpisodeStore from '../assets/movie.js'
+import fetchMovies from '../assets/movie.js';
 import {useRouter} from 'vue-router';
-import {useConfigStore, useEpisodeStore} from "../assets/store.js";
+import {MovieEpisodeStore, useConfigStore, useEpisodeStore} from "../assets/store.js";
+
 
 const movies = ref([]);
 const loading = ref(true);
@@ -33,13 +31,9 @@ const error = ref(null);
 const isExpanded = ref(false);
 const router = useRouter();
 const configStore = useConfigStore();
-const episodeStore = useEpisodeStore();
+const episodeStore = MovieEpisodeStore();
 
-const truncatedDescription = computed(() => {
-  return episodeStore.mainTitleDescription.length > 100
-      ? episodeStore.mainTitleDescription.slice(0, 100) + '...'
-      : episodeStore.mainTitleDescription;
-});
+
 
 const toggleDescription = () => {
   isExpanded.value = !isExpanded.value;
@@ -56,9 +50,9 @@ const formatDate = (datetime) => {
 
 onMounted(async () => {
   try {
-    movies.value = await fetchAnimationData()
+    movies.value = await fetchMovies(); // 이렇게 사용!
   } catch (e) {
-    error.value = 'Error fetching animation data';
+    error.value = 'Error fetching movie data';
     console.error(e);
   } finally {
     loading.value = false;
@@ -74,7 +68,7 @@ const navigateToVideoInfo = (id) => {
   }
 
   router.push({
-    path: '/videoInfo',
+    path: '/movieVideoInfo', // ✅ 여기 경로를 애니에서 영화로 바꿔야 함!!
     query: { id: id }
   });
 };
